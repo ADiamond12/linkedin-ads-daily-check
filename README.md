@@ -19,7 +19,7 @@ The tool writes three artifacts on every run:
 
 ## Why This Form Factor
 
-The assignment describes a specialist who already works from a spreadsheet and LinkedIn Campaign Manager. A single-file HTML report keeps that workflow simple:
+The workflow assumes a specialist who already works from spreadsheet exports and LinkedIn Campaign Manager. A single-file HTML report keeps that workflow simple:
 
 - no deployment required
 - one rerun command
@@ -81,7 +81,7 @@ AI is optional at runtime:
 
 - If enabled and an API key is present, it can generate the `Analyst note`.
 - If no API key is present, the tool falls back to deterministic rule-based notes.
-- No API key is required to review or run the shipped submission artifacts.
+- No API key is required to review or run the included report artifacts.
 
 AI does not calculate KPIs, pacing, or campaign ranking. Those remain deterministic in all modes so the report stays repeatable and auditable.
 
@@ -114,7 +114,7 @@ No third-party Python packages are required for the base version.
 
 - The public Google Sheet CSV export is the default live data source.
 - Monthly budget is a user input because the source data does not include it.
-- Campaign names are accepted in the 7-part and 8-part formats present in the assignment data.
+- Campaign names are accepted in the 7-part and 8-part formats present in the source data.
 - Conversion rate is calculated as `Conversions / Clicks`.
 - CPL is calculated as `Total spent / Leads`; if no leads exist, CPL is shown as `N/A`.
 - This v1 does not connect back to LinkedIn, edit campaigns, or automate budget changes.

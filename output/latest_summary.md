@@ -1,6 +1,6 @@
 # LinkedIn Ads Daily Check
 
-Generated at: 2026-05-01T10:58:29+00:00
+Generated at: 2026-05-01T11:01:02+00:00
 Latest data date: 2026-03-03
 Reporting month: 2026-03
 Effective source: https://docs.google.com/spreadsheets/d/1bkmvmKsrjnI_nHdmw1wFc_MCGGDYY3QGu36or8mBK3w/export?format=csv

@@ -875,8 +875,8 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 
     assumptions = [
         "The Google Sheet or CSV input is treated as the source of truth and contains one row per campaign per day.",
-        "Campaign names are expected in either the 7-part or 8-part format used by the assignment data.",
-        "Conversion rate is calculated as Conversions / Clicks because that is the KPI definition in the assignment.",
+        "Campaign names are expected in either the 7-part or 8-part format used by the source data.",
+        "Conversion rate is calculated as Conversions / Clicks because that is the configured KPI definition.",
         "CPL is calculated as Total spent / Leads and shown as N/A when a campaign generated no leads.",
         "Budget pacing needs a monthly budget input because the source data does not include budget values.",
         "Optional live AI can generate the analyst note at runtime, while KPI scoring, pacing, and ranking stay deterministic.",
