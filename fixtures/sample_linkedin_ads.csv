@@ -1,0 +1,7 @@
+Date,Campaign name,Impressions,Clicks,Total spent,Conversions,Leads
+2026-03-02,Q1'26 | prod_alpha | WW | Procurement Team | Tofu Conversion | Lead Gen | Document,1000,20,80,1,2
+2026-03-02,Q1'26 | prod_beta | NA | Finance Team | Evaluation | Site Visits | Image,2000,40,100,0,0
+2026-03-03,Q1'26 | prod_alpha | WW | Not Consented | Procurement Team | Tofu Conversion | Lead Gen | Image,2000,10,300,0,0
+2026-03-03,Q1'26 | prod_beta | NA | Finance Team | Evaluation | Site Visits | Image,5000,30,180,0,0
+2026-03-03,Q1'26 | prod_gamma | EMEA | Consented | Ops Team | Late Funnel | Lead Gen | Document,4000,40,160,2,4
+2026-03-03,Q1'26 | prod_delta | APAC | IT Team | Evaluation | Site Visits | Image,3500,25,100,2,0
