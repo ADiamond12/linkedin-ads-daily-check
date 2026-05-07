@@ -1,6 +1,6 @@
 {
-  "csv_url": "https://docs.google.com/spreadsheets/d/1bkmvmKsrjnI_nHdmw1wFc_MCGGDYY3QGu36or8mBK3w/export?format=csv",
-  "monthly_budget": 500000,
+  "csv_path": "fixtures/sample_linkedin_ads.csv",
+  "monthly_budget": 1000,
   "targets": {
     "cpc_max": 5.0,
     "ctr_min": 0.65,

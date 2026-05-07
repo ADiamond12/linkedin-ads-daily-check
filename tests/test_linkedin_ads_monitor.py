@@ -130,7 +130,7 @@ class LinkedinAdsMonitorTests(unittest.TestCase):
 
             report = json.loads((output_dir / "latest_report.json").read_text(encoding="utf-8"))
             self.assertEqual(report["latest_date"], "2026-03-03")
-            self.assertEqual(report["effective_source"], str(FIXTURE_PATH.resolve()))
+            self.assertEqual(report["effective_source"], FIXTURE_PATH.as_posix())
             self.assertGreaterEqual(len(report["action_list"]), 3)
 
             summary_text = (output_dir / "latest_summary.md").read_text(encoding="utf-8")

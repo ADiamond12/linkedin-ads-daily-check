@@ -19,10 +19,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
 
-DEFAULT_SHEET_CSV_URL = (
-    "https://docs.google.com/spreadsheets/d/"
-    "1bkmvmKsrjnI_nHdmw1wFc_MCGGDYY3QGu36or8mBK3w/export?format=csv"
-)
+DEFAULT_SAMPLE_CSV_PATH = "fixtures/sample_linkedin_ads.csv"
 DEFAULT_TARGETS = {
     "cpc_max": 5.0,
     "ctr_min": 0.65,
@@ -114,12 +111,14 @@ def deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]
     return merged
 
 
-def load_rows(csv_url: str, csv_path: str | None) -> list[dict[str, str]]:
+def load_rows(csv_url: str | None, csv_path: str | None) -> list[dict[str, str]]:
     if csv_path:
         raw_text = Path(csv_path).read_text(encoding="utf-8-sig")
-    else:
+    elif csv_url:
         with urllib.request.urlopen(csv_url, timeout=30) as response:
             raw_text = response.read().decode("utf-8-sig")
+    else:
+        raise ValueError("A CSV path or CSV URL is required.")
     reader = csv.DictReader(io.StringIO(raw_text))
     required_headers = {
         "Date",
@@ -710,32 +709,32 @@ def render_html(report: dict[str, Any]) -> str:
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>LinkedIn Ads Daily Check</title>
   <style>
-    :root {{ --ink:#173244; --muted:#587081; --paper:rgba(255,255,255,.84); --line:rgba(23,50,68,.12); --good:#0c7b5d; --warn:#b86e06; --bad:#b43f2f; --shadow:0 18px 45px rgba(17,37,50,.12); }}
+    :root {{ --ink:#17212b; --muted:#586570; --paper:#ffffff; --surface:#f5f3ee; --line:#d9d6cd; --good:#0c7b5d; --warn:#a96400; --bad:#b43f2f; --shadow:0 1px 2px rgba(23,33,43,.08); }}
     * {{ box-sizing:border-box; }}
-    body {{ margin:0; font-family:"IBM Plex Sans","Segoe UI",sans-serif; color:var(--ink); background:radial-gradient(circle at top left,rgba(225,245,237,.95),transparent 36%),radial-gradient(circle at top right,rgba(224,241,255,.9),transparent 34%),linear-gradient(160deg,#f8f2ea 0%,#eff5f4 48%,#edf4fb 100%); line-height:1.5; }}
-    .shell {{ width:min(1240px,calc(100vw - 48px)); margin:32px auto 56px; }}
-    .hero {{ background:linear-gradient(135deg,rgba(8,84,118,.93),rgba(19,47,71,.95)); color:#f8fbfd; border-radius:28px; padding:30px 32px 26px; box-shadow:var(--shadow); }}
-    .hero h1 {{ margin:0 0 12px; font-size:clamp(2rem,5vw,3rem); line-height:1.02; letter-spacing:-.04em; }}
-    .hero p {{ margin:0; max-width:840px; color:rgba(248,251,253,.9); }}
+    body {{ margin:0; font-family:"IBM Plex Sans","Segoe UI",sans-serif; color:var(--ink); background:var(--surface); line-height:1.5; }}
+    .shell {{ width:min(1240px,calc(100vw - 48px)); margin:28px auto 48px; }}
+    .hero {{ background:#17212b; color:#f8fbfd; border-radius:12px; padding:28px 30px 24px; box-shadow:var(--shadow); }}
+    .hero h1 {{ margin:0 0 12px; font-size:clamp(2rem,5vw,3rem); line-height:1.05; letter-spacing:0; }}
+    .hero p {{ margin:0; max-width:840px; color:#dce3e8; }}
     .hero-meta {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-top:26px; }}
-    .meta-card,.panel {{ background:var(--paper); border:1px solid var(--line); border-radius:24px; box-shadow:var(--shadow); backdrop-filter:blur(10px); }}
+    .meta-card,.panel {{ background:var(--paper); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); }}
     .meta-card {{ padding:18px 20px; }}
-    .meta-card p {{ margin:0 0 6px; color:rgba(248,251,253,.75); font-size:.88rem; text-transform:uppercase; letter-spacing:.08em; }}
+    .meta-card p {{ margin:0 0 6px; color:#c5ced5; font-size:.88rem; text-transform:uppercase; letter-spacing:.06em; }}
     .meta-card strong {{ display:block; font-size:1.5rem; color:#fff; }}
     nav {{ display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 0; }}
-    nav a {{ color:rgba(248,251,253,.92); text-decoration:none; border:1px solid rgba(255,255,255,.2); padding:8px 12px; border-radius:999px; font-size:.92rem; }}
+    nav a {{ color:#f8fbfd; text-decoration:none; border:1px solid rgba(255,255,255,.24); padding:8px 12px; border-radius:8px; font-size:.92rem; }}
     .layout {{ display:grid; grid-template-columns:2.2fr 1fr; gap:20px; margin-top:22px; }}
     .stack {{ display:grid; gap:20px; }}
     .panel {{ padding:22px; }}
     .section-title {{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:18px; }}
-    .section-title h2,.section-title h3 {{ margin:0; font-size:1.18rem; letter-spacing:-.02em; }}
+    .section-title h2,.section-title h3 {{ margin:0; font-size:1.18rem; letter-spacing:0; }}
     .muted {{ color:var(--muted); }}
     .metric-grid {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }}
-    .metric-tile,.strip-card {{ background:#fff; border:1px solid rgba(23,50,68,.08); border-radius:18px; padding:16px; }}
-    .eyebrow {{ margin:0 0 10px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-size:.78rem; }}
+    .metric-tile,.strip-card {{ background:#fbfaf7; border:1px solid var(--line); border-radius:10px; padding:16px; }}
+    .eyebrow {{ margin:0 0 10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-size:.78rem; }}
     .metric-row {{ display:flex; align-items:center; justify-content:space-between; gap:12px; }}
-    .metric-row strong,.strip-card strong {{ font-size:1.35rem; letter-spacing:-.03em; display:block; margin-top:6px; }}
-    .chip {{ display:inline-flex; align-items:center; border-radius:999px; padding:7px 10px; font-size:.8rem; font-weight:600; white-space:nowrap; }}
+    .metric-row strong,.strip-card strong {{ font-size:1.35rem; letter-spacing:0; display:block; margin-top:6px; }}
+    .chip {{ display:inline-flex; align-items:center; border-radius:7px; padding:7px 10px; font-size:.8rem; font-weight:600; white-space:nowrap; }}
     .chip.good {{ color:var(--good); background:rgba(12,123,93,.12); }} .chip.warn {{ color:var(--warn); background:rgba(184,110,6,.12); }} .chip.bad {{ color:var(--bad); background:rgba(180,63,47,.13); }} .chip.muted {{ color:var(--muted); background:rgba(88,112,129,.12); }}
     .summary-list,.assumption-list {{ margin:0; padding-left:20px; }} .summary-list li,.assumption-list li {{ margin-bottom:10px; }}
     .pacing-strip {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-top:16px; }}
@@ -829,9 +828,9 @@ def render_markdown_summary(report: dict[str, Any]) -> str:
         f"{alert_lines}\n\n"
         "## Analyst Note\n\n"
         f"{analyst_lines}\n\n"
-        "## AI Disclosure\n\n"
-        "- Optional live AI can generate the analyst note at runtime when enabled.\n"
-        "- If AI is disabled or unavailable, the report uses deterministic rule-based notes.\n"
+        "## Optional Analyst Note Mode\n\n"
+        "- A live analyst note can be enabled at runtime.\n"
+        "- When disabled, the report falls back to deterministic rule-based notes.\n"
         "- KPI scoring, pacing logic, and campaign ranking remain deterministic.\n"
     )
 
@@ -845,18 +844,21 @@ def ensure_budget(monthly_budget: float | None) -> float:
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     config_from_file = load_config(args.config)
     config = deep_merge(
-        {"csv_url": DEFAULT_SHEET_CSV_URL, "monthly_budget": None, "targets": DEFAULT_TARGETS, "ai": DEFAULT_AI_CONFIG},
+        {"csv_url": None, "csv_path": DEFAULT_SAMPLE_CSV_PATH, "monthly_budget": None, "targets": DEFAULT_TARGETS, "ai": DEFAULT_AI_CONFIG},
         config_from_file,
     )
     if args.csv_url:
         config["csv_url"] = args.csv_url
+    if args.csv_path:
+        config["csv_path"] = args.csv_path
     if args.monthly_budget is not None:
         config["monthly_budget"] = args.monthly_budget
     if args.enable_ai_summary:
         config["ai"] = deep_merge(config["ai"], {"enabled": True})
 
-    effective_source = str(Path(args.csv_path).resolve()) if args.csv_path else config["csv_url"]
-    rows = normalize_rows(load_rows(config["csv_url"], args.csv_path))
+    configured_csv_path = config.get("csv_path")
+    effective_source = Path(configured_csv_path).as_posix() if configured_csv_path else config["csv_url"]
+    rows = normalize_rows(load_rows(config["csv_url"], configured_csv_path))
     report_month = pick_report_month(rows, args.month)
     month_rows = [row for row in rows if row["date"].strftime("%Y-%m") == report_month]
     if not month_rows:
@@ -875,11 +877,11 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
 
     assumptions = [
         "The Google Sheet or CSV input is treated as the source of truth and contains one row per campaign per day.",
-        "Campaign names are expected in either the 7-part or 8-part format used by the source data.",
-        "Conversion rate is calculated as Conversions / Clicks because that is the configured KPI definition.",
+        "Campaign names are expected in the 7-part or 8-part format used by the sample export.",
+        "Conversion rate is calculated as Conversions / Clicks to match the campaign export KPI definition.",
         "CPL is calculated as Total spent / Leads and shown as N/A when a campaign generated no leads.",
         "Budget pacing needs a monthly budget input because the source data does not include budget values.",
-        "Optional live AI can generate the analyst note at runtime, while KPI scoring, pacing, and ranking stay deterministic.",
+        "A live analyst note can be enabled at runtime, but KPI scoring, pacing logic, and campaign ranking remain deterministic.",
     ]
 
     report_payload = {
