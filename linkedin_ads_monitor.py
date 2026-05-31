@@ -750,7 +750,7 @@ def render_html(report: dict[str, Any]) -> str:
   <main class="shell">
     <section class="hero" id="overview">
       <h1>LinkedIn Ads Daily Check</h1>
-      <p>A daily analyst assistant for LinkedIn Ads that turns the raw spreadsheet into a decision-ready KPI and pacing report in under two minutes.</p>
+      <p>A daily analyst assistant for LinkedIn Ads that turns the raw spreadsheet into a decision-ready KPI and pacing report.</p>
       <div class="hero-meta">
         <div class="meta-card"><p>Latest data date</p><strong>{html.escape(report['latest_date'])}</strong></div>
         <div class="meta-card"><p>Reporting month</p><strong>{html.escape(report['report_month'])}</strong></div>
