@@ -19,6 +19,10 @@ The tool writes three runtime artifacts on every run:
 
 The `output/` directory is treated as generated runtime state and is not part of the committed public repo surface. A curated sample report lives under `docs/sample-output/`.
 
+## Demo Screenshot
+
+![LinkedIn Ads Daily Check sample report](docs/screenshots/daily-check-report.png)
+
 ## Why This Form Factor
 
 The intended user already works from a spreadsheet and LinkedIn Campaign Manager. A single-file HTML report keeps that workflow simple:

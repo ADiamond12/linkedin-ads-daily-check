@@ -22,7 +22,7 @@ to the project maintainer through a private channel first.
 - The main KPI, pacing, and prioritization logic is deterministic.
 - The optional AI note path should be treated as untrusted generated text.
 - API keys must be provided through environment variables and never committed.
-- The shipped demo artifacts under `output/` are static sample outputs, not live service endpoints.
+- The shipped demo artifact under `docs/sample-output/` is static synthetic sample output, not a live service endpoint.
 
 ## Out Of Scope
 

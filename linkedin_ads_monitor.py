@@ -719,8 +719,8 @@ def render_html(report: dict[str, Any]) -> str:
     .hero-meta {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-top:26px; }}
     .meta-card,.panel {{ background:var(--paper); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); }}
     .meta-card {{ padding:18px 20px; }}
-    .meta-card p {{ margin:0 0 6px; color:#c5ced5; font-size:.88rem; text-transform:uppercase; letter-spacing:.06em; }}
-    .meta-card strong {{ display:block; font-size:1.5rem; color:#fff; }}
+    .meta-card p {{ margin:0 0 6px; color:var(--muted); font-size:.88rem; text-transform:uppercase; letter-spacing:.06em; }}
+    .meta-card strong {{ display:block; font-size:1.5rem; color:var(--ink); }}
     nav {{ display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 0; }}
     nav a {{ color:#f8fbfd; text-decoration:none; border:1px solid rgba(255,255,255,.24); padding:8px 12px; border-radius:8px; font-size:.92rem; }}
     .layout {{ display:grid; grid-template-columns:2.2fr 1fr; gap:20px; margin-top:22px; }}
