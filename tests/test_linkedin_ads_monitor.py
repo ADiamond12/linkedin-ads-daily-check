@@ -137,6 +137,10 @@ class LinkedinAdsMonitorTests(unittest.TestCase):
             self.assertIn("Today's Action List", summary_text)
             self.assertIn("prod_alpha", summary_text)
 
+            html_text = (output_dir / "latest_report.html").read_text(encoding="utf-8")
+            self.assertIn("Daily review workflow", html_text)
+            self.assertIn("Campaign export or fixture CSV", html_text)
+
     def test_alerts_and_wins_do_not_overlap(self) -> None:
         report = lam.build_report(
             lam.parse_args(

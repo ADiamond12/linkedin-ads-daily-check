@@ -717,6 +717,10 @@ def render_html(report: dict[str, Any]) -> str:
     .hero h1 {{ margin:0 0 12px; font-size:clamp(2rem,5vw,3rem); line-height:1.05; letter-spacing:0; }}
     .hero p {{ margin:0; max-width:840px; color:#dce3e8; }}
     .hero-meta {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-top:26px; }}
+    .review-flow {{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:18px; }}
+    .flow-card {{ border:1px solid rgba(255,255,255,.18); border-radius:10px; padding:14px; background:rgba(255,255,255,.06); }}
+    .flow-card span {{ display:block; color:#aebbc6; text-transform:uppercase; letter-spacing:.08em; font-size:.72rem; margin-bottom:6px; }}
+    .flow-card strong {{ display:block; color:#ffffff; font-size:1rem; line-height:1.3; }}
     .meta-card,.panel {{ background:var(--paper); border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow); }}
     .meta-card {{ padding:18px 20px; }}
     .meta-card p {{ margin:0 0 6px; color:var(--muted); font-size:.88rem; text-transform:uppercase; letter-spacing:.06em; }}
@@ -743,7 +747,7 @@ def render_html(report: dict[str, Any]) -> str:
     .data-table th {{ color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.08em; }}
     .two-up {{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:20px; }}
     .detail,.footer-note,.empty-state {{ color:var(--muted); }} .detail,.footer-note {{ margin-top:12px; font-size:.92rem; }}
-    @media (max-width:980px) {{ .layout,.two-up {{ grid-template-columns:1fr; }} .shell {{ width:min(100vw - 24px,1240px); margin-top:12px; }} .hero {{ padding:24px 20px 22px; }} .panel {{ padding:18px; }} }}
+    @media (max-width:980px) {{ .layout,.two-up,.review-flow {{ grid-template-columns:1fr; }} .shell {{ width:min(100vw - 24px,1240px); margin-top:12px; }} .hero {{ padding:24px 20px 22px; }} .panel {{ padding:18px; }} }}
   </style>
 </head>
 <body>
@@ -757,6 +761,11 @@ def render_html(report: dict[str, Any]) -> str:
         <div class="meta-card"><p>Monthly budget</p><strong>{format_currency(pacing['monthly_budget'])}</strong></div>
         <div class="meta-card"><p>Pacing status</p><strong>{html.escape(pacing['label'])}</strong></div>
         <div class="meta-card"><p>Scoring mode</p><strong>Deterministic rules</strong></div>
+      </div>
+      <div class="review-flow" aria-label="Daily review workflow">
+        <div class="flow-card"><span>Input</span><strong>Campaign export or fixture CSV</strong></div>
+        <div class="flow-card"><span>Review artifact</span><strong>KPI cards, pacing, and ranked actions</strong></div>
+        <div class="flow-card"><span>Decision handoff</span><strong>Open campaigns to inspect first</strong></div>
       </div>
       <nav><a href="#kpis">KPI snapshot</a><a href="#actions">Action list</a><a href="#pacing">Budget pacing</a><a href="#campaigns">Campaign review</a><a href="#assumptions">Assumptions</a></nav>
     </section>

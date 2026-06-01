@@ -4,6 +4,13 @@ Open [docs/sample-output/daily-check-sample-report.html](docs/sample-output/dail
 
 This project turns a LinkedIn campaign export into a daily account-health check for an Ads specialist. One command refreshes the report, calculates the required KPIs, checks budget pacing against a configurable monthly budget, and ranks the campaigns that need manual review first.
 
+## Useful In Practice For
+
+- Replacing the morning spreadsheet scan with one repeatable review artifact
+- Checking account-level KPI health before opening individual campaigns
+- Prioritizing campaigns that need a human decision instead of browsing every row
+- Saving the HTML, JSON, and Markdown outputs as daily evidence
+
 ## What This Report Answers
 
 - Are CPC, CTR, CPL, and conversion rate on target today?
