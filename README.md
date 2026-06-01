@@ -66,6 +66,14 @@ The intended user already works from a spreadsheet and LinkedIn Campaign Manager
 
 ## How To Rerun It
 
+One-command reviewer path:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1
+```
+
+That script runs the deterministic unittest suite, regenerates the latest local report from the committed fixture, and refreshes the curated sample HTML under `docs/sample-output/`.
+
 Default deterministic path against the shipped sample fixture:
 
 ```powershell
