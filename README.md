@@ -11,6 +11,14 @@ This project turns a LinkedIn campaign export into a daily account-health check 
 - Which campaigns should the specialist inspect first, and why?
 - What artifact can be saved or shared after each daily review?
 
+## What The Project Proves
+
+- turns a raw campaign export into a readable account-health report
+- separates deterministic KPI scoring from the optional analyst note
+- produces HTML, JSON, and Markdown artifacts from one local command
+- prioritizes review work instead of only displaying metric tables
+- keeps the default demo reproducible through the committed fixture
+
 The tool writes three runtime artifacts on every run:
 
 - `output/latest_report.html`: shareable HTML report

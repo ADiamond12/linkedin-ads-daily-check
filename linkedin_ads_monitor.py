@@ -756,6 +756,7 @@ def render_html(report: dict[str, Any]) -> str:
         <div class="meta-card"><p>Reporting month</p><strong>{html.escape(report['report_month'])}</strong></div>
         <div class="meta-card"><p>Monthly budget</p><strong>{format_currency(pacing['monthly_budget'])}</strong></div>
         <div class="meta-card"><p>Pacing status</p><strong>{html.escape(pacing['label'])}</strong></div>
+        <div class="meta-card"><p>Scoring mode</p><strong>Deterministic rules</strong></div>
       </div>
       <nav><a href="#kpis">KPI snapshot</a><a href="#actions">Action list</a><a href="#pacing">Budget pacing</a><a href="#campaigns">Campaign review</a><a href="#assumptions">Assumptions</a></nav>
     </section>
