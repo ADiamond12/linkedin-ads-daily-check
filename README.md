@@ -26,6 +26,15 @@ This project turns a LinkedIn campaign export into a daily account-health check 
 - prioritizes review work instead of only displaying metric tables
 - keeps the default demo reproducible through the committed fixture
 
+## Reviewer Proof
+
+- **Problem:** a daily account check can become a slow spreadsheet scan with no consistent artifact to save or share.
+- **First command:** `powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1`
+- **Proof artifact:** refreshed HTML, JSON, and Markdown reports from the committed fixture.
+- **Open first:** `docs/sample-output/daily-check-sample-report.html`
+- **Validation:** 10 unittest tests cover KPI calculations, pacing, campaign prioritization, and output behavior.
+- **Current limitation:** the default path is deterministic and fixture-backed; analyst notes are optional and must not replace human review.
+
 The tool writes three runtime artifacts on every run:
 
 - `output/latest_report.html`: shareable HTML report
