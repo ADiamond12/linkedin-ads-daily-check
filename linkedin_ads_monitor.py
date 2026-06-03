@@ -34,6 +34,17 @@ DEFAULT_AI_CONFIG = {
     "api_key_env": "OPENAI_API_KEY",
 }
 CURRENT_MONTH_ALIASES = {"current", "latest"}
+TREND_METRICS = ("spend", "clicks", "leads", "cpc", "ctr", "cpl", "conversion_rate")
+LOWER_IS_BETTER_METRICS = {"cpc", "cpl"}
+METRIC_LABELS = {
+    "spend": "Spend",
+    "clicks": "Clicks",
+    "leads": "Leads",
+    "cpc": "CPC",
+    "ctr": "CTR",
+    "cpl": "CPL",
+    "conversion_rate": "Conversion rate",
+}
 
 
 @dataclass(frozen=True)
@@ -439,6 +450,177 @@ def build_campaign_wins(
     return wins[:limit]
 
 
+def campaign_control_key(row: dict[str, Any]) -> str:
+    return " | ".join([row["product"], row["region"], row["objective"]])
+
+
+def pct_change(current: float | int | None, previous: float | int | None) -> float | None:
+    if current is None or previous is None or previous == 0:
+        return None
+    return ((float(current) - float(previous)) / float(previous)) * 100
+
+
+def trend_tone(metric_name: str, delta_pct: float | None) -> str:
+    if delta_pct is None:
+        return "muted"
+    if abs(delta_pct) < 5:
+        return "muted"
+    if metric_name in LOWER_IS_BETTER_METRICS:
+        return "good" if delta_pct < 0 else "bad"
+    if metric_name in {"ctr", "conversion_rate", "leads", "clicks"}:
+        return "good" if delta_pct > 0 else "bad"
+    return "warn" if abs(delta_pct) >= 25 else "muted"
+
+
+def format_metric_value(metric_name: str, value: float | int | None) -> str:
+    if metric_name in {"spend", "cpc", "cpl"}:
+        return format_currency(value if value is None else float(value))
+    if metric_name in {"ctr", "conversion_rate"}:
+        return format_pct(value if value is None else float(value))
+    return format_number(value)
+
+
+def format_delta_pct(delta_pct: float | None) -> str:
+    if delta_pct is None:
+        return "n/a"
+    sign = "+" if delta_pct > 0 else ""
+    return f"{sign}{delta_pct:.1f}%"
+
+
+def build_daily_trends(month_rows: list[dict[str, Any]], latest_date: date) -> list[dict[str, Any]]:
+    previous_dates = sorted({row["date"] for row in month_rows if row["date"] < latest_date})
+    if not previous_dates:
+        return []
+    previous_date = previous_dates[-1]
+    latest_summary = aggregate([row for row in month_rows if row["date"] == latest_date])
+    previous_summary = aggregate([row for row in month_rows if row["date"] == previous_date])
+    trends: list[dict[str, Any]] = []
+    for metric_name in TREND_METRICS:
+        current = latest_summary.get(metric_name)
+        previous = previous_summary.get(metric_name)
+        delta = pct_change(current, previous)
+        trends.append(
+            {
+                "metric": metric_name,
+                "label": METRIC_LABELS[metric_name],
+                "latest_date": latest_date.isoformat(),
+                "previous_date": previous_date.isoformat(),
+                "current": current,
+                "previous": previous,
+                "current_display": format_metric_value(metric_name, current),
+                "previous_display": format_metric_value(metric_name, previous),
+                "delta_pct": delta,
+                "delta_display": format_delta_pct(delta),
+                "tone": trend_tone(metric_name, delta),
+            }
+        )
+    return trends
+
+
+def aggregate_campaign_group(rows: list[dict[str, Any]]) -> dict[str, float | None]:
+    return aggregate(rows)
+
+
+def build_campaign_movements(
+    month_rows: list[dict[str, Any]],
+    latest_date: date,
+    limit: int,
+) -> list[dict[str, Any]]:
+    previous_dates = sorted({row["date"] for row in month_rows if row["date"] < latest_date})
+    if not previous_dates:
+        return []
+    previous_date = previous_dates[-1]
+    latest_groups: dict[str, list[dict[str, Any]]] = {}
+    previous_groups: dict[str, list[dict[str, Any]]] = {}
+    for row in month_rows:
+        if row["date"] == latest_date:
+            latest_groups.setdefault(campaign_control_key(row), []).append(row)
+        elif row["date"] == previous_date:
+            previous_groups.setdefault(campaign_control_key(row), []).append(row)
+
+    movements: list[dict[str, Any]] = []
+    for key, latest_items in latest_groups.items():
+        previous_items = previous_groups.get(key)
+        if not previous_items:
+            continue
+        latest_metrics = aggregate_campaign_group(latest_items)
+        previous_metrics = aggregate_campaign_group(previous_items)
+        spend_delta = (latest_metrics["spend"] or 0) - (previous_metrics["spend"] or 0)
+        click_delta = (latest_metrics["clicks"] or 0) - (previous_metrics["clicks"] or 0)
+        lead_delta = (latest_metrics["leads"] or 0) - (previous_metrics["leads"] or 0)
+        ctr_delta = pct_change(latest_metrics["ctr"], previous_metrics["ctr"])
+        movement_score = abs(spend_delta) + (abs(click_delta) * 2) + (abs(lead_delta) * 12)
+        movements.append(
+            {
+                "campaign_key": key,
+                "latest_date": latest_date.isoformat(),
+                "previous_date": previous_date.isoformat(),
+                "spend_delta": spend_delta,
+                "click_delta": click_delta,
+                "lead_delta": lead_delta,
+                "ctr_delta_pct": ctr_delta,
+                "current_spend": latest_metrics["spend"],
+                "previous_spend": previous_metrics["spend"],
+                "current_ctr": latest_metrics["ctr"],
+                "previous_ctr": previous_metrics["ctr"],
+                "movement_score": round(movement_score, 3),
+            }
+        )
+    movements.sort(key=lambda item: item["movement_score"], reverse=True)
+    return movements[:limit]
+
+
+def build_risk_register(
+    latest_statuses: dict[str, dict[str, Any]],
+    pacing: dict[str, Any],
+    alerts: list[dict[str, Any]],
+    daily_trends: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    risks: list[dict[str, str]] = []
+    if pacing["tone"] != "good":
+        risks.append(
+            {
+                "area": "Budget pacing",
+                "severity": "high" if pacing["tone"] == "bad" else "medium",
+                "evidence": (
+                    f"{pacing['label']} with projected month-end spend "
+                    f"{format_currency(pacing['projected_month_end_spend'])}."
+                ),
+                "next_step": "Recheck monthly budget, pacing target, and campaigns driving spend.",
+            }
+        )
+    for metric, status in latest_statuses.items():
+        if status["tone"] == "bad":
+            risks.append(
+                {
+                    "area": f"Account KPI: {METRIC_LABELS[metric]}",
+                    "severity": "high",
+                    "evidence": f"{status['label']} against target {format_metric_value(metric, status['threshold'])}.",
+                    "next_step": "Inspect the campaign review table and pause or revise the first flagged campaigns.",
+                }
+            )
+    for alert in alerts[:3]:
+        risks.append(
+            {
+                "area": "Campaign review",
+                "severity": "high" if alert["severity"] >= 3 else "medium",
+                "evidence": f"{alert['campaign_name']}: {alert['reasons'][0]}.",
+                "next_step": "Open this campaign first and decide whether to pause, edit targeting, or adjust budget.",
+            }
+        )
+    for trend in daily_trends:
+        if trend["tone"] == "bad":
+            risks.append(
+                {
+                    "area": f"Daily movement: {trend['label']}",
+                    "severity": "medium",
+                    "evidence": f"{trend['label']} moved {trend['delta_display']} since the previous reporting day.",
+                    "next_step": "Compare the campaign movement table before changing budget allocation.",
+                }
+            )
+    return risks[:8]
+
+
 def ai_config_from_dict(config: dict[str, Any]) -> AIProviderConfig:
     return AIProviderConfig(
         enabled=bool(config.get("enabled", False)),
@@ -628,11 +810,18 @@ def build_action_list(
     pacing: dict[str, Any],
     alerts: list[dict[str, Any]],
     wins: list[dict[str, Any]],
+    risk_register: list[dict[str, str]] | None = None,
 ) -> list[str]:
     actions = [build_account_health_line(latest_summary, latest_statuses)]
     actions.append(
         f"Pacing verdict: {pacing['label']} with projected month-end spend {format_currency(pacing['projected_month_end_spend'])} against a {format_currency(pacing['monthly_budget'])} budget."
     )
+    if risk_register:
+        actions.append(
+            "Resolve these control risks first: "
+            + "; ".join(f"{risk['area']} ({risk['severity']})" for risk in risk_register[:3])
+            + "."
+        )
     if alerts:
         actions.append("Review these campaigns first: " + "; ".join(f"{alert['campaign_name']} ({alert['reasons'][0]})" for alert in alerts[:3]) + ".")
     else:
@@ -694,6 +883,56 @@ def render_campaign_table(rows: list[dict[str, Any]], empty_label: str, is_alert
     return "\n".join(row_html)
 
 
+def render_trend_cards(trends: list[dict[str, Any]]) -> str:
+    if not trends:
+        return '<div class="empty-state">No previous reporting day exists for trend comparison.</div>'
+    cards = []
+    for trend in trends:
+        cards.append(
+            '<article class="trend-card">'
+            f"<p class=\"eyebrow\">{html.escape(trend['label'])}</p>"
+            f"<strong>{html.escape(trend['current_display'])}</strong>"
+            f"{tone_chip(trend['delta_display'], trend['tone'])}"
+            f"<span class=\"trend-note\">Previous: {html.escape(trend['previous_display'])}</span>"
+            "</article>"
+        )
+    return "".join(cards)
+
+
+def render_risk_table(risks: list[dict[str, str]]) -> str:
+    if not risks:
+        return '<tr><td colspan="4" class="empty-state">No control risks were generated for this report.</td></tr>'
+    rows = []
+    for risk in risks:
+        rows.append(
+            "<tr>"
+            f"<td>{html.escape(risk['area'])}</td>"
+            f"<td>{html.escape(risk['severity'].title())}</td>"
+            f"<td>{html.escape(risk['evidence'])}</td>"
+            f"<td>{html.escape(risk['next_step'])}</td>"
+            "</tr>"
+        )
+    return "\n".join(rows)
+
+
+def render_movement_table(movements: list[dict[str, Any]]) -> str:
+    if not movements:
+        return '<tr><td colspan="6" class="empty-state">No comparable campaign movement exists for the latest reporting day.</td></tr>'
+    rows = []
+    for movement in movements:
+        rows.append(
+            "<tr>"
+            f"<td>{html.escape(movement['campaign_key'])}</td>"
+            f"<td>{format_currency(movement['previous_spend'])}</td>"
+            f"<td>{format_currency(movement['current_spend'])}</td>"
+            f"<td>{format_currency(movement['spend_delta'])}</td>"
+            f"<td>{format_delta_pct(movement['ctr_delta_pct'])}</td>"
+            f"<td>{format_number(movement['lead_delta'])}</td>"
+            "</tr>"
+        )
+    return "\n".join(rows)
+
+
 def render_html(report: dict[str, Any]) -> str:
     latest_cards = build_metric_cards(report["latest_summary"], report["targets"])
     month_cards = build_metric_cards(report["month_summary"], report["targets"])
@@ -701,13 +940,16 @@ def render_html(report: dict[str, Any]) -> str:
     actions_markup = "".join(f"<li>{html.escape(item)}</li>" for item in report["action_list"])
     analyst_markup = "".join(f"<li>{html.escape(item)}</li>" for item in report["analyst_note_lines"])
     assumptions_markup = "".join(f"<li>{html.escape(item)}</li>" for item in report["assumptions"])
+    trend_markup = render_trend_cards(report["daily_trends"])
+    risk_markup = render_risk_table(report["risk_register"])
+    movement_markup = render_movement_table(report["campaign_movements"])
 
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LinkedIn Ads Daily Check</title>
+  <title>LinkedIn Ads Control Report</title>
   <style>
     :root {{ --ink:#17212b; --muted:#586570; --paper:#ffffff; --surface:#f5f3ee; --line:#d9d6cd; --good:#0c7b5d; --warn:#a96400; --bad:#b43f2f; --shadow:0 1px 2px rgba(23,33,43,.08); }}
     * {{ box-sizing:border-box; }}
@@ -742,6 +984,10 @@ def render_html(report: dict[str, Any]) -> str:
     .chip.good {{ color:var(--good); background:rgba(12,123,93,.12); }} .chip.warn {{ color:var(--warn); background:rgba(184,110,6,.12); }} .chip.bad {{ color:var(--bad); background:rgba(180,63,47,.13); }} .chip.muted {{ color:var(--muted); background:rgba(88,112,129,.12); }}
     .summary-list,.assumption-list {{ margin:0; padding-left:20px; }} .summary-list li,.assumption-list li {{ margin-bottom:10px; }}
     .pacing-strip {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-top:16px; }}
+    .trend-grid {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }}
+    .trend-card {{ background:#fbfaf7; border:1px solid var(--line); border-radius:10px; padding:15px; }}
+    .trend-card strong {{ display:block; margin:0 0 10px; font-size:1.25rem; }}
+    .trend-note {{ display:block; margin-top:10px; color:var(--muted); font-size:.86rem; }}
     .data-table {{ width:100%; border-collapse:collapse; font-size:.92rem; }}
     .data-table th,.data-table td {{ text-align:left; padding:12px 10px; border-bottom:1px solid rgba(23,50,68,.08); vertical-align:top; }}
     .data-table th {{ color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.08em; }}
@@ -753,8 +999,8 @@ def render_html(report: dict[str, Any]) -> str:
 <body>
   <main class="shell">
     <section class="hero" id="overview">
-      <h1>LinkedIn Ads Daily Check</h1>
-      <p>A daily analyst assistant for LinkedIn Ads that turns the raw spreadsheet into a decision-ready KPI and pacing report.</p>
+      <h1>LinkedIn Ads Control Report</h1>
+      <p>A deterministic marketing-ops report that turns the raw LinkedIn Ads export into KPI health, pacing, movement, risks, and campaign actions.</p>
       <div class="hero-meta">
         <div class="meta-card"><p>Latest data date</p><strong>{html.escape(report['latest_date'])}</strong></div>
         <div class="meta-card"><p>Reporting month</p><strong>{html.escape(report['report_month'])}</strong></div>
@@ -791,6 +1037,14 @@ def render_html(report: dict[str, Any]) -> str:
         <div class="strip-card"><p class="eyebrow">Projected gap to budget</p><strong>{format_currency(pacing['projected_gap'])}</strong></div>
       </div>
     </section>
+    <section class="panel" id="control-risks" style="margin-top:20px;">
+      <div class="section-title"><h2>Control risks</h2><span class="muted">Prioritized review register</span></div>
+      <table class="data-table"><thead><tr><th>Area</th><th>Severity</th><th>Evidence</th><th>Next step</th></tr></thead><tbody>{risk_markup}</tbody></table>
+    </section>
+    <section class="panel" id="trends" style="margin-top:20px;">
+      <div class="section-title"><h2>Daily movement</h2><span class="muted">Previous reporting day comparison</span></div>
+      <div class="trend-grid">{trend_markup}</div>
+    </section>
     <section class="two-up" id="campaigns">
       <div class="panel">
         <div class="section-title"><h2>Campaigns to review first</h2><span class="muted">Top {len(report['alerts'])}</span></div>
@@ -800,6 +1054,10 @@ def render_html(report: dict[str, Any]) -> str:
         <div class="section-title"><h2>Best campaigns on latest day</h2><span class="muted">Top {len(report['wins'])}</span></div>
         <table class="data-table"><thead><tr><th>Campaign</th><th>Region</th><th>Objective</th><th>Spend</th><th>CTR</th><th>CPC</th><th>CPL</th><th>Conv. rate</th><th>Status</th></tr></thead><tbody>{render_campaign_table(report['wins'], 'No clear winners met the minimum volume filters.', False)}</tbody></table>
       </div>
+    </section>
+    <section class="panel" id="movement" style="margin-top:20px;">
+      <div class="section-title"><h2>Campaign movement</h2><span class="muted">Latest vs previous reporting day</span></div>
+      <table class="data-table"><thead><tr><th>Campaign group</th><th>Previous spend</th><th>Current spend</th><th>Spend delta</th><th>CTR delta</th><th>Lead delta</th></tr></thead><tbody>{movement_markup}</tbody></table>
     </section>
     <section class="panel" id="assumptions" style="margin-top:20px;">
       <div class="section-title"><h2>Assumptions</h2></div>
@@ -814,6 +1072,14 @@ def render_html(report: dict[str, Any]) -> str:
 
 def render_markdown_summary(report: dict[str, Any]) -> str:
     action_lines = "\n".join(f"{index + 1}. {item}" for index, item in enumerate(report["action_list"]))
+    risk_lines = "\n".join(
+        f"- {risk['severity'].title()} - {risk['area']}: {risk['evidence']} Next: {risk['next_step']}"
+        for risk in report["risk_register"]
+    ) or "- No control risks were generated for this report."
+    trend_lines = "\n".join(
+        f"- {trend['label']}: {trend['current_display']} vs {trend['previous_display']} ({trend['delta_display']})"
+        for trend in report["daily_trends"]
+    ) or "- No previous reporting day exists for comparison."
     alert_lines = "\n".join(
         f"- {alert['campaign_name']}: {'; '.join(alert['reasons'])}"
         for alert in report["alerts"][:5]
@@ -834,6 +1100,10 @@ def render_markdown_summary(report: dict[str, Any]) -> str:
         f"- Pacing verdict: {report['pacing']['label']} with projected month-end spend {format_currency(report['pacing']['projected_month_end_spend'])}\n\n"
         "## Today's Action List\n\n"
         f"{action_lines}\n\n"
+        "## Control Risks\n\n"
+        f"{risk_lines}\n\n"
+        "## Daily Movement\n\n"
+        f"{trend_lines}\n\n"
         "## Campaigns To Review First\n\n"
         f"{alert_lines}\n\n"
         "## Analyst Note\n\n"
@@ -884,6 +1154,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
     pacing = build_pacing(ensure_budget(config["monthly_budget"]), month_summary["spend"] or 0.0, latest_date)
     alerts = build_campaign_alerts(latest_rows, targets, args.top_campaigns)
     wins = build_campaign_wins(latest_rows, targets, args.top_campaigns, {alert["campaign_name"] for alert in alerts})
+    daily_trends = build_daily_trends(month_rows, latest_date)
+    campaign_movements = build_campaign_movements(month_rows, latest_date, args.top_campaigns)
+    risk_register = build_risk_register(latest_statuses, pacing, alerts, daily_trends)
 
     assumptions = [
         "The Google Sheet or CSV input is treated as the source of truth and contains one row per campaign per day.",
@@ -903,6 +1176,9 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "month_statuses": month_statuses,
         "pacing": pacing,
         "targets": targets,
+        "daily_trends": daily_trends,
+        "risk_register": risk_register,
+        "campaign_movements": campaign_movements,
         "top_alerts": [{"campaign_name": alert["campaign_name"], "region": alert["region"], "objective": alert["objective"], "spend": alert["spend"], "reasons": alert["reasons"]} for alert in alerts[:5]],
     }
     fallback_lines = build_rule_based_analyst_lines(latest_summary, month_summary, pacing, latest_statuses, month_statuses, alerts)
@@ -919,9 +1195,12 @@ def build_report(args: argparse.Namespace) -> dict[str, Any]:
         "pacing": pacing,
         "alerts": alerts,
         "wins": wins,
+        "daily_trends": daily_trends,
+        "campaign_movements": campaign_movements,
+        "risk_register": risk_register,
         "targets": targets,
         "assumptions": assumptions,
-        "action_list": build_action_list(latest_summary, latest_statuses, pacing, alerts, wins),
+        "action_list": build_action_list(latest_summary, latest_statuses, pacing, alerts, wins, risk_register),
         "analyst_note_lines": summary_result.lines,
         "analyst_note_source": summary_result.source_label,
         "analyst_note_detail": summary_result.detail,

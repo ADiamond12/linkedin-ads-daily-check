@@ -2,12 +2,14 @@
 
 Open [docs/sample-output/daily-check-sample-report.html](docs/sample-output/daily-check-sample-report.html) first.
 
-This project turns a LinkedIn campaign export into a daily account-health check for an Ads specialist. One command refreshes the report, calculates the required KPIs, checks budget pacing against a configurable monthly budget, and ranks the campaigns that need manual review first.
+This project turns a LinkedIn campaign export into a daily marketing-ops control report for an Ads specialist. One command refreshes the report, calculates KPI health, compares daily movement against the previous reporting day, checks budget pacing, creates a risk register, and ranks the campaigns that need manual review first.
 
 ## Useful In Practice For
 
 - Replacing the morning spreadsheet scan with one repeatable review artifact
 - Checking account-level KPI health before opening individual campaigns
+- Spotting day-over-day movement before changing budget allocation
+- Keeping a compact risk register for campaign review and pacing issues
 - Prioritizing campaigns that need a human decision instead of browsing every row
 - Saving the HTML, JSON, and Markdown outputs as daily evidence
 
@@ -16,21 +18,23 @@ This project turns a LinkedIn campaign export into a daily account-health check 
 - Are CPC, CTR, CPL, and conversion rate on target today?
 - Is month-to-date spend pacing correctly against budget?
 - Which campaigns should the specialist inspect first, and why?
+- What changed since the previous reporting day?
+- Which control risks should be resolved before budget changes?
 - What artifact can be saved or shared after each daily review?
 
 ## What The Project Proves
 
-- turns a raw campaign export into a readable account-health report
+- turns a raw campaign export into a readable marketing-ops control report
 - separates deterministic KPI scoring from the optional analyst note
 - produces HTML, JSON, and Markdown artifacts from one local command
-- prioritizes review work instead of only displaying metric tables
+- prioritizes review work with risk register, movement, and campaign tables instead of only displaying metrics
 - keeps the default demo reproducible through the committed fixture
 
 ## Reviewer Proof
 
 - **Problem:** a daily account check can become a slow spreadsheet scan with no consistent artifact to save or share.
 - **First command:** `powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1`
-- **Proof artifact:** refreshed HTML, JSON, and Markdown reports from the committed fixture.
+- **Proof artifact:** refreshed HTML, JSON, and Markdown reports from the committed fixture, including KPI cards, daily movement, pacing, risk register, and campaign triage.
 - **Open first:** `docs/sample-output/daily-check-sample-report.html`
 - **Validation:** 10 unittest tests cover KPI calculations, pacing, campaign prioritization, and output behavior.
 - **Current limitation:** the default path is deterministic and fixture-backed; analyst notes are optional and must not replace human review.
@@ -42,6 +46,7 @@ The tool writes three runtime artifacts on every run:
 - `output/latest_summary.md`: copy-paste summary for email, Slack, or notes
 
 The `output/` directory is treated as generated runtime state and is not part of the committed public repo surface. A curated sample report lives under `docs/sample-output/`.
+Additional edge-case fixture coverage lives in `fixtures/edge_case_linkedin_ads.csv` and tests the cases a daily control report must catch: under-pacing, spend with no clicks, high CPL, and low CTR.
 
 ## Demo Screenshot
 
@@ -69,9 +74,10 @@ The intended user already works from a spreadsheet and LinkedIn Campaign Manager
 1. Open [docs/sample-output/daily-check-sample-report.html](docs/sample-output/daily-check-sample-report.html) and frame it as the replacement for manually scanning the spreadsheet every morning.
 2. Show the latest-date and month-to-date KPI snapshots.
 3. Point to the pacing section to explain whether the account is under, on, or over pace.
-4. Read one or two lines from `Today's action list` to show the report is action-oriented, not just a metric dump.
-5. Scroll to `Campaigns to review first` and show that every prioritized row includes the reason it was flagged.
-6. Close by showing that rerunning the script refreshes the local HTML, JSON, and Markdown outputs under `output/`.
+4. Open `Control risks` to show what should be resolved before budget or campaign changes.
+5. Open `Daily movement` and `Campaign movement` to show what changed since the previous reporting day.
+6. Scroll to `Campaigns to review first` and show that every prioritized row includes the reason it was flagged.
+7. Close by showing that rerunning the script refreshes the local HTML, JSON, and Markdown outputs under `output/`.
 
 ## How To Rerun It
 
@@ -116,6 +122,10 @@ Campaign ranking is rule-based and deterministic. A campaign is pushed toward th
 - lead-gen spend without leads
 - traffic spend without conversions
 - spend with no clicks
+- high CPL on lead-gen campaigns
+- low CTR on high-impression campaigns
+
+The risk register combines pacing, account-level KPI misses, campaign-level breaches, and negative daily movement into one reviewer checklist. That makes the report useful as a control artifact, not just a static dashboard.
 
 The `Best campaigns on latest day` table excludes anything already flagged for review so the report does not tell the specialist to both fix and scale the same campaign.
 

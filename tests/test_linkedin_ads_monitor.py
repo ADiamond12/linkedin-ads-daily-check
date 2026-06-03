@@ -11,6 +11,7 @@ import linkedin_ads_monitor as lam
 
 
 FIXTURE_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "sample_linkedin_ads.csv"
+EDGE_FIXTURE_PATH = Path(__file__).resolve().parents[1] / "fixtures" / "edge_case_linkedin_ads.csv"
 
 
 class LinkedinAdsMonitorTests(unittest.TestCase):
@@ -72,6 +73,80 @@ class LinkedinAdsMonitorTests(unittest.TestCase):
         self.assertGreaterEqual(len(alerts), 2)
         self.assertIn("prod_alpha", alerts[0]["campaign_name"])
         self.assertTrue(any("Lead gen spend without leads" in reason for reason in alerts[0]["reasons"]))
+
+    def test_edge_case_fixture_covers_daily_review_failure_modes(self) -> None:
+        rows = lam.normalize_rows(lam.load_rows("", str(EDGE_FIXTURE_PATH)))
+        latest_rows = [row for row in rows if row["date"] == date(2026, 3, 4)]
+
+        alerts = lam.build_campaign_alerts(latest_rows, lam.DEFAULT_TARGETS, limit=10)
+        reasons_by_campaign = {
+            alert["campaign_name"]: " ".join(alert["reasons"])
+            for alert in alerts
+        }
+
+        self.assertIn("Spend with no clicks", reasons_by_campaign["Q1'26 | prod_zero | WW | Ops Team | Awareness | Site Visits | Image"])
+        self.assertIn("CPL", reasons_by_campaign["Q1'26 | prod_cpl | NA | Not Consented | Procurement Team | Tofu Conversion | Lead Gen | Document"])
+        self.assertIn("CTR", reasons_by_campaign["Q1'26 | prod_ctr | EMEA | Finance Team | Evaluation | Site Visits | Image"])
+        self.assertNotIn(
+            "Q1'26 | prod_clean | APAC | IT Team | Evaluation | Site Visits | Image",
+            reasons_by_campaign,
+        )
+
+    def test_edge_case_report_has_prioritized_action_artifact(self) -> None:
+        report = lam.build_report(
+            lam.parse_args(
+                [
+                    "--csv-path",
+                    str(EDGE_FIXTURE_PATH),
+                    "--monthly-budget",
+                    "10000",
+                ]
+            )
+        )
+
+        action_text = " ".join(report["action_list"])
+        self.assertIn("Review these campaigns first", action_text)
+        self.assertIn("prod_cpl", action_text)
+        self.assertEqual(report["pacing"]["label"], "Under pace")
+        self.assertTrue(report["alerts"])
+        self.assertTrue(report["risk_register"])
+
+    def test_daily_trends_compare_latest_to_previous_reporting_day(self) -> None:
+        rows = lam.normalize_rows(lam.load_rows("", str(FIXTURE_PATH)))
+        trends = lam.build_daily_trends(rows, date(2026, 3, 3))
+        trend_by_metric = {trend["metric"]: trend for trend in trends}
+
+        self.assertIn("spend", trend_by_metric)
+        self.assertIn("ctr", trend_by_metric)
+        self.assertEqual(trend_by_metric["spend"]["previous_date"], "2026-03-02")
+        self.assertGreater(trend_by_metric["spend"]["current"], trend_by_metric["spend"]["previous"])
+        self.assertIn(trend_by_metric["ctr"]["tone"], {"good", "bad", "muted"})
+
+    def test_campaign_movements_surface_run_over_run_changes(self) -> None:
+        rows = lam.normalize_rows(lam.load_rows("", str(FIXTURE_PATH)))
+        movements = lam.build_campaign_movements(rows, date(2026, 3, 3), limit=5)
+
+        self.assertTrue(movements)
+        self.assertTrue(any("prod_beta" in movement["campaign_key"] for movement in movements))
+        self.assertTrue(all("spend_delta" in movement for movement in movements))
+
+    def test_risk_register_combines_pacing_kpi_alert_and_trend_evidence(self) -> None:
+        report = lam.build_report(
+            lam.parse_args(
+                [
+                    "--csv-path",
+                    str(FIXTURE_PATH),
+                    "--monthly-budget",
+                    "1000",
+                ]
+            )
+        )
+        risks = report["risk_register"]
+
+        self.assertTrue(risks)
+        self.assertTrue(any(risk["area"] == "Budget pacing" for risk in risks))
+        self.assertTrue(any(risk["area"].startswith("Campaign review") for risk in risks))
+        self.assertTrue(any(risk["next_step"] for risk in risks))
 
     def test_zero_division_metrics_return_none(self) -> None:
         metrics = lam.campaign_metrics(
@@ -135,11 +210,15 @@ class LinkedinAdsMonitorTests(unittest.TestCase):
 
             summary_text = (output_dir / "latest_summary.md").read_text(encoding="utf-8")
             self.assertIn("Today's Action List", summary_text)
+            self.assertIn("Control Risks", summary_text)
+            self.assertIn("Daily Movement", summary_text)
             self.assertIn("prod_alpha", summary_text)
 
             html_text = (output_dir / "latest_report.html").read_text(encoding="utf-8")
             self.assertIn("Daily review workflow", html_text)
             self.assertIn("Campaign export or fixture CSV", html_text)
+            self.assertIn("Control risks", html_text)
+            self.assertIn("Daily movement", html_text)
 
     def test_alerts_and_wins_do_not_overlap(self) -> None:
         report = lam.build_report(
