@@ -36,8 +36,12 @@ This project turns a LinkedIn campaign export into a daily marketing-ops control
 - **First command:** `powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1`
 - **Proof artifact:** refreshed HTML, JSON, and Markdown reports from the committed fixture, including KPI cards, daily movement, pacing, risk register, and campaign triage.
 - **Open first:** `docs/sample-output/daily-check-sample-report.html`
-- **Validation:** 10 unittest tests cover KPI calculations, pacing, campaign prioritization, and output behavior.
+- **Validation:** 17 unittest tests cover KPI calculations, pacing, campaign prioritization, output behavior, and the OpsForge module contract.
 - **Current limitation:** the default path is deterministic and fixture-backed; analyst notes are optional and must not replace human review.
+
+## OpsForge Module Contract
+
+`docs/opsforge-module-contract.json` records this repo as a supporting OpsForge control-report utility: accepted CSV inputs, generated reporting artifacts, proof files, deterministic boundary, and limitations. A unittest check validates that the module stays public-safe and correctly scoped.
 
 The tool writes three runtime artifacts on every run:
 

@@ -1,0 +1,38 @@
+{
+  "module_id": "opsforge-control-report-utility",
+  "repo": "linkedin-ads-daily-check",
+  "suite_role": "Supporting daily control report utility",
+  "status": "compact reporting utility",
+  "primary_user": "marketing operations reviewer checking campaign pacing and KPI health from a CSV export",
+  "input_types": [
+    "LinkedIn campaign CSV export",
+    "monthly budget",
+    "previous reporting day fixture",
+    "KPI target thresholds"
+  ],
+  "output_artifacts": [
+    "HTML daily control report",
+    "JSON scoring snapshot",
+    "Markdown action summary",
+    "pacing verdict",
+    "campaign review table",
+    "control risk register"
+  ],
+  "proof_artifacts": [
+    "docs/sample-output/daily-check-sample-report.html",
+    "docs/screenshots/daily-check-report.png"
+  ],
+  "local_demo_command": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run_demo.ps1",
+  "deployment_shape": "single-command Python reporting utility with deterministic fixture-backed output",
+  "safety_boundaries": [
+    "deterministic KPI and pacing logic",
+    "optional analyst note cannot replace manual review",
+    "sample data is synthetic",
+    "no advertising account credentials are required"
+  ],
+  "limitations": [
+    "not a hosted dashboard in this release",
+    "does not write changes back to LinkedIn Campaign Manager",
+    "CSV export freshness remains the user's responsibility"
+  ]
+}
