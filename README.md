@@ -89,6 +89,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run_demo.ps1
 
 That script runs the deterministic unittest suite, regenerates the latest local report from the committed fixture, and refreshes the curated sample HTML under `docs/sample-output/`.
 
+For isolated verification, set `LINKEDIN_ADS_OUTPUT_DIR` and `LINKEDIN_ADS_SAMPLE_OUTPUT_DIR` before running the demo script. The report logic is the same; only the write location changes.
+
 Default deterministic path against the shipped sample fixture:
 
 ```powershell
