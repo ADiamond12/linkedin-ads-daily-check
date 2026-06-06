@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>LinkedIn Ads Daily Check</title>
+  <title>LinkedIn Ads Control Report</title>
   <style>
     :root { --ink:#17212b; --muted:#586570; --paper:#ffffff; --surface:#f5f3ee; --line:#d9d6cd; --good:#0c7b5d; --warn:#a96400; --bad:#b43f2f; --shadow:0 1px 2px rgba(23,33,43,.08); }
     * { box-sizing:border-box; }
@@ -38,6 +38,10 @@
     .chip.good { color:var(--good); background:rgba(12,123,93,.12); } .chip.warn { color:var(--warn); background:rgba(184,110,6,.12); } .chip.bad { color:var(--bad); background:rgba(180,63,47,.13); } .chip.muted { color:var(--muted); background:rgba(88,112,129,.12); }
     .summary-list,.assumption-list { margin:0; padding-left:20px; } .summary-list li,.assumption-list li { margin-bottom:10px; }
     .pacing-strip { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-top:16px; }
+    .trend-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; }
+    .trend-card { background:#fbfaf7; border:1px solid var(--line); border-radius:10px; padding:15px; }
+    .trend-card strong { display:block; margin:0 0 10px; font-size:1.25rem; }
+    .trend-note { display:block; margin-top:10px; color:var(--muted); font-size:.86rem; }
     .data-table { width:100%; border-collapse:collapse; font-size:.92rem; }
     .data-table th,.data-table td { text-align:left; padding:12px 10px; border-bottom:1px solid rgba(23,50,68,.08); vertical-align:top; }
     .data-table th { color:var(--muted); font-size:.8rem; text-transform:uppercase; letter-spacing:.08em; }
@@ -49,8 +53,8 @@
 <body>
   <main class="shell">
     <section class="hero" id="overview">
-      <h1>LinkedIn Ads Daily Check</h1>
-      <p>A daily analyst assistant for LinkedIn Ads that turns the raw spreadsheet into a decision-ready KPI and pacing report.</p>
+      <h1>LinkedIn Ads Control Report</h1>
+      <p>A deterministic marketing-ops report that turns the raw LinkedIn Ads export into KPI health, pacing, movement, risks, and campaign actions.</p>
       <div class="hero-meta">
         <div class="meta-card"><p>Latest data date</p><strong>2026-03-03</strong></div>
         <div class="meta-card"><p>Reporting month</p><strong>2026-03</strong></div>
@@ -73,7 +77,7 @@
         <div class="metric-grid"><article class="metric-tile"><p class="eyebrow">CPC</p><div class="metric-row"><strong>$5.58</strong><span class="chip bad">Off target</span></div></article><article class="metric-tile"><p class="eyebrow">CTR</p><div class="metric-row"><strong>0.94%</strong><span class="chip good">On target</span></div></article><article class="metric-tile"><p class="eyebrow">CPL</p><div class="metric-row"><strong>$153.33</strong><span class="chip bad">Off target</span></div></article><article class="metric-tile"><p class="eyebrow">Conversion rate</p><div class="metric-row"><strong>3.03%</strong><span class="chip good">On target</span></div></article></div>
       </div>
       <aside class="stack">
-        <section class="panel" id="actions"><div class="section-title"><h2>Today's action list</h2><span class="chip muted">Deterministic</span></div><ul class="summary-list"><li>Account health: CPC $7.05 (off target vs $5.00); CTR 0.72% (on target vs 0.65%); CPL $185.00 (off target vs $120.00); Conversion rate 3.81% (on target vs 1.00%).</li><li>Pacing verdict: Over pace with projected month-end spend $9,506.67 against a $1,000.00 budget.</li><li>Review these campaigns first: Q1&#x27;26 | prod_alpha | WW | Not Consented | Procurement Team | Tofu Conversion | Lead Gen | Image (CPC $30.00 vs target $5.00); Q1&#x27;26 | prod_beta | NA | Finance Team | Evaluation | Site Visits | Image (CPC $6.00 vs target $5.00).</li><li>Protect or scale the strongest latest-day campaigns: Q1&#x27;26 | prod_gamma | EMEA | Consented | Ops Team | Late Funnel | Lead Gen | Document, Q1&#x27;26 | prod_delta | APAC | IT Team | Evaluation | Site Visits | Image.</li></ul></section>
+        <section class="panel" id="actions"><div class="section-title"><h2>Today's action list</h2><span class="chip muted">Deterministic</span></div><ul class="summary-list"><li>Account health: CPC $7.05 (off target vs $5.00); CTR 0.72% (on target vs 0.65%); CPL $185.00 (off target vs $120.00); Conversion rate 3.81% (on target vs 1.00%).</li><li>Pacing verdict: Over pace with projected month-end spend $9,506.67 against a $1,000.00 budget.</li><li>Resolve these control risks first: Budget pacing (high); Account KPI: CPC (high); Account KPI: CPL (high).</li><li>Review these campaigns first: Q1&#x27;26 | prod_alpha | WW | Not Consented | Procurement Team | Tofu Conversion | Lead Gen | Image (CPC $30.00 vs target $5.00); Q1&#x27;26 | prod_beta | NA | Finance Team | Evaluation | Site Visits | Image (CPC $6.00 vs target $5.00).</li><li>Protect or scale the strongest latest-day campaigns: Q1&#x27;26 | prod_gamma | EMEA | Consented | Ops Team | Late Funnel | Lead Gen | Document, Q1&#x27;26 | prod_delta | APAC | IT Team | Evaluation | Site Visits | Image.</li></ul></section>
         <section class="panel"><div class="section-title"><h2>Analyst note</h2><span class="chip muted">Rule-based fallback</span></div><ul class="summary-list"><li>Latest-day KPI misses: CPC, CPL. Prioritize budget away from campaigns that missed both CPC and CTR.</li><li>Pacing is over pace: projected month-end spend is $9,506.67 against a $1,000.00 budget.</li><li>Latest day delivered 4 leads from 105 clicks at $185.00 CPL.</li><li>Top campaign to inspect first: Q1&#x27;26 | prod_alpha | WW | Not Consented | Procurement Team | Tofu Conversion | Lead Gen | Image because cpc $30.00 vs target $5.00.</li></ul><p class="detail">Optional live AI narrative is disabled.</p></section>
       </aside>
     </section>
@@ -87,6 +91,21 @@
         <div class="strip-card"><p class="eyebrow">Projected gap to budget</p><strong>$8,506.67</strong></div>
       </div>
     </section>
+    <section class="panel" id="control-risks" style="margin-top:20px;">
+      <div class="section-title"><h2>Control risks</h2><span class="muted">Prioritized review register</span></div>
+      <table class="data-table"><thead><tr><th>Area</th><th>Severity</th><th>Evidence</th><th>Next step</th></tr></thead><tbody><tr><td>Budget pacing</td><td>High</td><td>Over pace with projected month-end spend $9,506.67.</td><td>Recheck monthly budget, pacing target, and campaigns driving spend.</td></tr>
+<tr><td>Account KPI: CPC</td><td>High</td><td>Off target against target $5.00.</td><td>Inspect the campaign review table and pause or revise the first flagged campaigns.</td></tr>
+<tr><td>Account KPI: CPL</td><td>High</td><td>Off target against target $120.00.</td><td>Inspect the campaign review table and pause or revise the first flagged campaigns.</td></tr>
+<tr><td>Campaign review</td><td>High</td><td>Q1&#x27;26 | prod_alpha | WW | Not Consented | Procurement Team | Tofu Conversion | Lead Gen | Image: CPC $30.00 vs target $5.00.</td><td>Open this campaign first and decide whether to pause, edit targeting, or adjust budget.</td></tr>
+<tr><td>Campaign review</td><td>Medium</td><td>Q1&#x27;26 | prod_beta | NA | Finance Team | Evaluation | Site Visits | Image: CPC $6.00 vs target $5.00.</td><td>Open this campaign first and decide whether to pause, edit targeting, or adjust budget.</td></tr>
+<tr><td>Daily movement: CPC</td><td>Medium</td><td>CPC moved +134.9% since the previous reporting day.</td><td>Compare the campaign movement table before changing budget allocation.</td></tr>
+<tr><td>Daily movement: CTR</td><td>Medium</td><td>CTR moved -63.8% since the previous reporting day.</td><td>Compare the campaign movement table before changing budget allocation.</td></tr>
+<tr><td>Daily movement: CPL</td><td>Medium</td><td>CPL moved +105.6% since the previous reporting day.</td><td>Compare the campaign movement table before changing budget allocation.</td></tr></tbody></table>
+    </section>
+    <section class="panel" id="trends" style="margin-top:20px;">
+      <div class="section-title"><h2>Daily movement</h2><span class="muted">Previous reporting day comparison</span></div>
+      <div class="trend-grid"><article class="trend-card"><p class="eyebrow">Spend</p><strong>$740.00</strong><span class="chip warn">+311.1%</span><span class="trend-note">Previous: $180.00</span></article><article class="trend-card"><p class="eyebrow">Clicks</p><strong>105</strong><span class="chip good">+75.0%</span><span class="trend-note">Previous: 60</span></article><article class="trend-card"><p class="eyebrow">Leads</p><strong>4</strong><span class="chip good">+100.0%</span><span class="trend-note">Previous: 2</span></article><article class="trend-card"><p class="eyebrow">CPC</p><strong>$7.05</strong><span class="chip bad">+134.9%</span><span class="trend-note">Previous: $3.00</span></article><article class="trend-card"><p class="eyebrow">CTR</p><strong>0.72%</strong><span class="chip bad">-63.8%</span><span class="trend-note">Previous: 2.00%</span></article><article class="trend-card"><p class="eyebrow">CPL</p><strong>$185.00</strong><span class="chip bad">+105.6%</span><span class="trend-note">Previous: $90.00</span></article><article class="trend-card"><p class="eyebrow">Conversion rate</p><strong>3.81%</strong><span class="chip good">+128.6%</span><span class="trend-note">Previous: 1.67%</span></article></div>
+    </section>
     <section class="two-up" id="campaigns">
       <div class="panel">
         <div class="section-title"><h2>Campaigns to review first</h2><span class="muted">Top 2</span></div>
@@ -98,6 +117,11 @@
         <table class="data-table"><thead><tr><th>Campaign</th><th>Region</th><th>Objective</th><th>Spend</th><th>CTR</th><th>CPC</th><th>CPL</th><th>Conv. rate</th><th>Status</th></tr></thead><tbody><tr><td>Q1&#x27;26 | prod_gamma | EMEA | Consented | Ops Team | Late Funnel | Lead Gen | Document</td><td>EMEA</td><td>Lead Gen</td><td>$160.00</td><td>1.00%</td><td>$4.00</td><td>$40.00</td><td>5.00%</td><td>4/4 KPI checks</td></tr>
 <tr><td>Q1&#x27;26 | prod_delta | APAC | IT Team | Evaluation | Site Visits | Image</td><td>APAC</td><td>Site Visits</td><td>$100.00</td><td>0.71%</td><td>$4.00</td><td>N/A</td><td>8.00%</td><td>3/3 KPI checks</td></tr></tbody></table>
       </div>
+    </section>
+    <section class="panel" id="movement" style="margin-top:20px;">
+      <div class="section-title"><h2>Campaign movement</h2><span class="muted">Latest vs previous reporting day</span></div>
+      <table class="data-table"><thead><tr><th>Campaign group</th><th>Previous spend</th><th>Current spend</th><th>Spend delta</th><th>CTR delta</th><th>Lead delta</th></tr></thead><tbody><tr><td>prod_alpha | WW | Lead Gen</td><td>$80.00</td><td>$300.00</td><td>$220.00</td><td>-75.0%</td><td>-2</td></tr>
+<tr><td>prod_beta | NA | Site Visits</td><td>$100.00</td><td>$180.00</td><td>$80.00</td><td>-70.0%</td><td>0</td></tr></tbody></table>
     </section>
     <section class="panel" id="assumptions" style="margin-top:20px;">
       <div class="section-title"><h2>Assumptions</h2></div>
